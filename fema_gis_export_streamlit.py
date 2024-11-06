@@ -21,8 +21,8 @@ if uploaded_file:
     # Read and transform the uploaded file
     df = pd.read_excel(uploaded_file)
 
-    # Ensure the Division column is a string
-    df['Division'] = df['Division'].astype(str)
+    # Ensure the Division column is a string?
+    # df['Division'] = df['Division'].astype(str)
     
     # Define divisions and rows to delete
     new_rows = []
