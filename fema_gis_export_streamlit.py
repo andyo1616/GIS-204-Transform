@@ -20,6 +20,9 @@ uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
 if uploaded_file:
     # Read and transform the uploaded file
     df = pd.read_excel(uploaded_file)
+
+    # Ensure the Division column is a string
+    df['Division'] = df['Division'].astype(str)
     
     # Define divisions and rows to delete
     new_rows = []
