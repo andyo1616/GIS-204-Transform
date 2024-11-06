@@ -49,7 +49,7 @@ if uploaded_file:
     df1.loc[df1['Division'] == 'Branch Office', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Branch Office', 'Division'].astype(str)
 
     # Transform columns
-    df1['temp'] = df1['Division']
+    df1['temp'] = df1['Division'].astype(str)
     df1['temp'] = df1['temp'].str[5:]
     df1['Division'] = df1['Division'].str[:2]
     df1["County"] = df1["temp"]
