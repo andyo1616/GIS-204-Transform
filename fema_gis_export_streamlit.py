@@ -10,7 +10,8 @@ Created in Google Colab
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timezone, timedelta
+import pytz
+from datetime import datetime
 from io import BytesIO
 
 st.title("ICS-204 Export File Transformer for GIS")
@@ -64,11 +65,14 @@ if uploaded_file:
 
     # Export df1 as Excel file with current date in filename
 
-    # Get the current UTC date
-    current_date = datetime.utcnow().strftime("%d%b%y")
-
-    # Adjust for time zone (UTC-6 for CT)
-    current_date = (datetime.utcnow() - timedelta(hours=6)).strftime("%d%b%y")
+    # Define local time zone
+    local_timezone = pytz.timezone('US/Central')
+    
+    # Get the current time in CT
+    central_time = datetime.now(central_timezone)
+    
+    # Format date
+    current_date = central_time.strftime("%d%b%y")
     
     current_date = datetime.now().strftime("%d%b%y")
     excel_filename = f"GIS_204_Export_{current_date}.xlsx"
