@@ -66,7 +66,7 @@ if uploaded_file:
     # Export df1 as Excel file with current date in filename
 
     # Define local time zone
-    local_timezone = pytz.timezone('US/Central')
+    central_timezone = pytz.timezone('US/Central')
     
     # Get the current time in CT
     central_time = datetime.now(central_timezone)
