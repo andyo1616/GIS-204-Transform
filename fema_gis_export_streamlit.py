@@ -20,9 +20,7 @@ uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
 if uploaded_file:
     # Read and transform the uploaded file
     df = pd.read_excel(uploaded_file)
-
-    # Ensure the Division column is a string?
-    # df['Division'] = df['Division'].astype(str)
+    df.columns = df.columns.str.replace('\n', '').str.strip()
     
     # Define divisions and rows to delete
     new_rows = []
@@ -45,11 +43,11 @@ if uploaded_file:
     df1 = pd.concat([df1, pd.DataFrame(new_rows)])
 
     # Modify Division values based on conditions
-    df1.loc[df1['Division'] == 'Not Set', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Not Set', 'Division'] #.astype(str)
-    df1.loc[df1['Division'] == 'Branch Office', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Branch Office', 'Division'] #.astype(str)
+    df1.loc[df1['Division'] == 'Not Set', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Not Set', 'Division']
+    df1.loc[df1['Division'] == 'Branch Office', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Branch Office', 'Division']
 
     # Transform columns
-    df1['temp'] = df1['Division'] #.astype(str)
+    df1['temp'] = df1['Division']
     df1['temp'] = df1['temp'].str[5:]
     df1['Division'] = df1['Division'].str[:2]
     df1["County"] = df1["temp"]
