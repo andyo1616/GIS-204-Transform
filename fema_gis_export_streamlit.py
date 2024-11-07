@@ -55,13 +55,19 @@ if uploaded_file:
     df1["County"] = df1["temp"]
     df1 = df1.drop("temp", axis=1)
 
+    # Convert Division to string
+    df1['Division'] = df1['Division'].astype(str)
+
     # Assign Branch values
-    df1['Branch'] = ''
-    for index, row in df1.iterrows():
-        if row['Division'] in ['47', '78', '45', '15', '30', '32', '37', '29', '34', '13']:
-            df1.loc[index, 'Branch'] = 'I'
-        elif row['Division'] in ['86', '90', '10', '46', '82']:
-            df1.loc[index, 'Branch'] = 'II'
+    branch_I_divisions = ['47', '78', '45', '15', '30', '32', '37', '29', '34', '13']
+    branch_II_divisions = ['86', '90', '10', '46', '82']
+
+    # Create Branch column
+    df1['Branch'] = '' 
+
+    df1.loc[df1['Division'].isin(branch_I_divisions), 'Branch'] = 'I'
+    df1.loc[df1['Division'].isin(branch_II_divisions), 'Branch'] = 'II'
+
 
     # Export df1 as Excel file with current date in filename
 
