@@ -32,17 +32,17 @@ if uploaded_file:
     rows_to_delete = []
 
     # Loop to expand rows based on Division condition
-    for index, row in df.iterrows():
-        if row['Division'] == 'Throughout Designated Counties':
-            for division in divisions:
-                new_row = row.copy()
-                new_row['Division'] = division
-                new_rows.append(new_row)
-            rows_to_delete.append(index)
+    #for index, row in df.iterrows():
+      #  if row['Division'] == 'Throughout Designated Counties':
+        #    for division in divisions:
+        #        new_row = row.copy()
+          #      new_row['Division'] = division
+          #      new_rows.append(new_row)
+          #  rows_to_delete.append(index)
 
     # Remove rows and add new ones
-    df1 = df.drop(rows_to_delete)
-    df1 = pd.concat([df1, pd.DataFrame(new_rows)])
+  #  df1 = df.drop(rows_to_delete)
+  #  df1 = pd.concat([df1, pd.DataFrame(new_rows)])
 
     # Modify Division values based on conditions
     df1.loc[df1['Division'] == 'Not Set', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Not Set', 'Division']
