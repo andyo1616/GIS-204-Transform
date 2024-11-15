@@ -41,7 +41,7 @@ if uploaded_file:
           #  rows_to_delete.append(index)
 
     # Remove rows and add new ones
-  #  df1 = df.drop(rows_to_delete)
+     df1 = df.drop(rows_to_delete)
   #  df1 = pd.concat([df1, pd.DataFrame(new_rows)])
 
     # Modify Division values based on conditions
