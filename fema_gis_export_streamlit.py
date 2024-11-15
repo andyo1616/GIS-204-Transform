@@ -41,10 +41,11 @@ if uploaded_file:
           #  rows_to_delete.append(index)
 
     # Remove rows and add new ones
-     df1 = df.drop(rows_to_delete)
+  #  df1 = df.drop(rows_to_delete)
   #  df1 = pd.concat([df1, pd.DataFrame(new_rows)])
 
     # Modify Division values based on conditions
+    df1 = df
     df1.loc[df1['Division'] == 'Not Set', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Not Set', 'Division']
     df1.loc[df1['Division'] == 'Branch Office', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Branch Office', 'Division']
 
