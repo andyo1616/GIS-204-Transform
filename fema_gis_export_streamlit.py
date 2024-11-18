@@ -51,8 +51,10 @@ if uploaded_file:
             for division in divisions:
                 new_row = row.copy()
                 new_row['Division'] = division
-                new_row['Longitude'] = tn_dat.loc[tn_dat['Division'] == division, 'Longitude'].values[0]
-                new_row['Latitude'] = tn_dat.loc[tn_dat['Division'] == division, 'Latitude'].values[0]
+                division_data = tn_dat[tn_dat['Division'] == division]
+            if not division_data.empty:
+                new_row['Latitude'] = division_data.iloc[0]['Latitude']
+                new_row['Longitude'] = division_data.iloc[0]['Longitude']
                 new_row['Address'] = 'Centroid of County'
                 new_rows.append(new_row)
             rows_to_delete.append(index)
