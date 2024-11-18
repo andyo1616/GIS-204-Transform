@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """FEMA_GIS_EXPORT_Streamlit.ipynb
-06 November 2024
+18 November 2024
 Created by LTJG Andrew Orser, USCG 
 Built for FEMA TN Helene response
 Created in Google Colab
@@ -23,26 +23,42 @@ if uploaded_file:
     # Read and transform the uploaded file
     df = pd.read_excel(uploaded_file)
     df.columns = df.columns.str.replace('\n', '').str.strip()
-    
+
     # Define divisions and rows to delete
     new_rows = []
     divisions = ['10 - Carter', '13 - Claiborne', '15 - Cocke', '29 - Grainger', '30 - Greene',
                  '32 - Hamblen', '37 - Hawkins', '45 - Jefferson', '46 - Johnson', '78 - Sevier',
                  '82 - Sullivan', '86 - Unicoi', '90 - Washington']
+    tn_dict = {'County': {0: 'Carter', 1: 'Clairborne', 2: 'Cocke', 3: 'Grainger', 4: 'Greene', 5: 'Hamblen', 6: 'Hancock',
+                            7: 'Hawkins', 8: 'Jefferson', 9: 'Johnson', 10: 'Seveir', 11: 'Sullivan', 12: 'Unicoi', 13: 'Washington'},
+                 'Branch': {0: 'II', 1: 'I', 2: 'I', 3: 'I', 4: 'I', 5: 'I', 6: 'I',
+                            7: 'I', 8: 'II', 9: 'I', 10: 'I', 11: 'II', 12: 'II', 13: 'II'},
+                 'Division': {0: 10, 1: 13, 2: 15, 3: 29, 4: 30, 5: 32, 6: 37,
+                              7: 45, 8: 46, 9: 47, 10: 78, 11: 82, 12: 86, 13: 90},
+                 'Longitude': {0: -82.127478, 1: -83.660416, 2: -83.121183, 3: -83.50962, 4: -82.845827, 5: -83.275211, 6: -83.221826,
+                               7: -82.944688, 8: -83.446312, 9: -81.851772, 10: -83.524192, 11: -82.304143, 12: -82.516883, 13: -82.49742},
+                 'Latitude': {0: 36.292721, 1: 36.485855, 2: 35.925437, 3: 36.276259, 4: 36.175351, 5: 36.203454, 6: 36.523646,
+                              7: 36.441163, 8: 36.050984, 9: 36.454937, 10: 35.784656, 11: 36.512915, 12: 36.063347, 13: 36.293297}}
+    tn_dat = pd.DataFrame(tn_dict)
+
     rows_to_delete = []
 
     # Loop to expand rows based on Division condition
-    #for index, row in df.iterrows():
-      #  if row['Division'] == 'Throughout Designated Counties':
-        #    for division in divisions:
-        #        new_row = row.copy()
-          #      new_row['Division'] = division
-          #      new_rows.append(new_row)
-          #  rows_to_delete.append(index)
+
+    for index, row in df.iterrows():
+        if row['Division'] == 'Throughout Designated Counties' and row['Branch'] != 'Mobile Emergency Response Support' :
+            for division in divisions:
+                new_row = row.copy()
+                new_row['Division'] = division
+                new_row['Longitude'] = tn_dat.loc[tn_dat['Division'] == division, 'Longitude'].values[0]
+                new_row['Latitude'] = tn_dat.loc[tn_dat['Division'] == division, 'Latitude'].values[0]
+                new_row['Address'] = 'Centroid of County'
+                new_rows.append(new_row)
+            rows_to_delete.append(index)
 
     # Remove rows and add new ones
-  #  df1 = df.drop(rows_to_delete)
-  #  df1 = pd.concat([df1, pd.DataFrame(new_rows)])
+    df1 = df.drop(rows_to_delete)
+    df1 = pd.concat([df1, pd.DataFrame(new_rows)])
 
     # Modify Division values based on conditions
     df1 = df
@@ -64,7 +80,7 @@ if uploaded_file:
     branch_II_divisions = ['86', '90', '10', '46', '82']
 
     # Create Branch column
-    df1['Branch'] = '' 
+    df1['Branch'] = ''
 
     df1.loc[df1['Division'].isin(branch_I_divisions), 'Branch'] = 'I'
     df1.loc[df1['Division'].isin(branch_II_divisions), 'Branch'] = 'II'
@@ -74,13 +90,13 @@ if uploaded_file:
 
     # Define local time zone
     central_timezone = pytz.timezone('US/Central')
-    
+
     # Get the current time in CT
     central_time = datetime.now(central_timezone)
-    
+
     # Format date
     current_date = central_time.strftime("%d%b%y")
-    
+
     current_date = datetime.now().strftime("%d%b%y")
     excel_filename = f"GIS_204_Export_{current_date}.xlsx"
     output = BytesIO()
