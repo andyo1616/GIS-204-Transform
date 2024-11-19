@@ -19,9 +19,11 @@ st.title("ICS-204 Export File Transformer for GIS")
 # File uploader for users to upload .xlsx files
 uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
 
-if uploaded_file:
+if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
     df.columns = df.columns.str.replace('\n', '').str.strip()
+else:
+    st.warning("Please upload an Excel file.")
 
 # Define divisions and rows to delete
 new_rows = []
