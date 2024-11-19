@@ -100,10 +100,10 @@ central_time = datetime.now(central_timezone)
 current_date = central_time.strftime("%d%b%y")
 
 current_date = datetime.now().strftime("%d%b%y")
-    excel_filename = f"GIS_204_Export_{current_date}.xlsx"
-    output = BytesIO()
-    df1.to_excel(output, index=False)
-    output.seek(0)
+excel_filename = f"GIS_204_Export_{current_date}.xlsx"
+output = BytesIO()
+df1.to_excel(output, index=False)
+output.seek(0)
 
 # Provide download link in Streamlit
 st.download_button(label="Download Transformed Excel File", data=output, file_name=excel_filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
