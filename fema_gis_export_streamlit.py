@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """FEMA_GIS_EXPORT_Streamlit.ipynb
-18 November 2024
+Version 1.1
+20 November 2024
 Created by LTJG Andrew Orser, USCG 
 Built for FEMA TN Helene response
 Created in Google Colab
@@ -14,14 +15,34 @@ import pytz
 from datetime import datetime
 from io import BytesIO
 
-st.title("ICS-215 Export File Transformer for GIS")
+st.title("ICS-204 Export File Transformer for GIS")
 
-# File uploader for users to upload .xlsx files
-uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
+# File uploader for ICS_215_EXPORT
+uploaded_file_215 = st.file_uploader("Choose an Excel file for ICS_215_EXPORT", type="xlsx")
 
-if uploaded_file is not None:
-    df = pd.read_excel(uploaded_file)
-    df.columns = df.columns.str.replace('\n', '').str.strip()
+# File uploader for COMMUNICATIONS_LIST_FACILITIES(ICS_205A)
+uploaded_file_205A = st.file_uploader("Choose an Excel file for COMMUNICATIONS_LIST_FACILITIES(ICS_205A)", type="xlsx")
+
+# Checkbox to enable or disable the loop
+enable_loop = st.checkbox("Enable 'Throughout Designated Counties' loop", value=True)
+
+if uploaded_file_215 and uploaded_file_205A:
+    # Load both files into dataframes
+    df_215 = pd.read_excel(uploaded_file_215)
+    df_215.columns = df_215.columns.str.replace('\n', '').str.strip()
+    df_205A = pd.read_excel(uploaded_file_205A)
+    df_205A.columns = df_205A.columns.str.replace('\n', '').str.strip()
+
+    # Add the 'Facility Type' column from df_205A to df_215
+    # Matching 'Facility Name' in df_205A with 'Facility' in df_215
+    df_215 = pd.merge(
+        df_215,
+        df_205A[['Facility Name', 'Facility Type']],
+        left_on='Facility',
+        right_on='Facility Name',
+        how='left'
+    )
+    df_215.drop(columns=['Facility Name'], inplace=True)
 
     # Define divisions and rows to delete
     new_rows = []
@@ -45,22 +66,23 @@ if uploaded_file is not None:
 
     rows_to_delete = []
 
-    # Loop to expand rows based on Division condition
-    for index, row in df.iterrows():
-        if row['Division'] == 'Throughout Designated Counties' and row['Branch'] != 'Mobile Emergency Response Support':
-            for division in divisions:
-                new_row = row.copy()
-                new_row['Division'] = division
-                division_data = tn_dat[tn_dat['Division'] == division]
-                if not division_data.empty:
-                    new_row['Latitude'] = division_data.iloc[0]['Latitude']
-                    new_row['Longitude'] = division_data.iloc[0]['Longitude']
-                    new_row['Address'] = 'Centroid of County'
-                new_rows.append(new_row)
-            rows_to_delete.append(index)
+    # Conditional loop based on the checkbox
+    if enable_loop:
+        for index, row in df_215.iterrows():
+            if row['Division'] == 'Throughout Designated Counties' and row['Branch'] != 'Mobile Emergency Response Support':
+                for division in divisions:
+                    new_row = row.copy()
+                    new_row['Division'] = division
+                    division_data = tn_dat[tn_dat['Division'] == division]
+                    if not division_data.empty:
+                        new_row['Latitude'] = division_data.iloc[0]['Latitude']
+                        new_row['Longitude'] = division_data.iloc[0]['Longitude']
+                        new_row['Address'] = 'Centroid of County'
+                    new_rows.append(new_row)
+                rows_to_delete.append(index)
 
     # Remove rows and add new ones
-    df1 = df.drop(rows_to_delete)
+    df1 = df_215.drop(rows_to_delete)
     df1 = pd.concat([df1, pd.DataFrame(new_rows)])
     df1 = df1.reset_index(drop=True)
 
@@ -92,7 +114,7 @@ if uploaded_file is not None:
     central_timezone = pytz.timezone('US/Central')
     central_time = datetime.now(central_timezone)
     current_date = central_time.strftime("%d%b%y")
-    excel_filename = f"GIS_215_Export_{current_date}.xlsx"
+    excel_filename = f"GIS_204_Export_{current_date}.xlsx"
     output = BytesIO()
     df1.to_excel(output, index=False)
     output.seek(0)
@@ -105,4 +127,4 @@ if uploaded_file is not None:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 else:
-    st.warning("Please upload an Excel file.")
+    st.warning("Please upload both Excel files.")
