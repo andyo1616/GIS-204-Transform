@@ -44,6 +44,15 @@ if uploaded_file_215 and uploaded_file_205A:
     )
     df_215.drop(columns=['Facility Name'], inplace=True)
 
+    # Replace null values in Facility Type with "No Work Assignment"
+    df_215['Facility Type'] = df_215['Facility Type'].fillna("No Work Assignment")
+
+    # Reorder the columns to place Facility Type after Facility
+    columns = list(df_215.columns)
+    facility_index = columns.index('Facility')
+    columns.insert(facility_index + 1, columns.pop(columns.index('Facility Type')))
+    df_215 = df_215[columns]
+
     # Define divisions and rows to delete
     new_rows = []
     divisions = ['10 - Carter', '13 - Claiborne', '15 - Cocke', '29 - Grainger', '30 - Greene',
