@@ -8,7 +8,6 @@ Created in Google Colab
 
 
 """
-
 import streamlit as st
 import pandas as pd
 import pytz
@@ -102,20 +101,20 @@ if uploaded_file_215 and uploaded_file_205A:
     new_rows_unmatched = []
 
     for index, row in unmatched_facilities.iterrows():
-       new_row = row.copy()
+      new_row = row.copy()
     
-        # Combine Street, City, State, and Zip into Address column
-        new_row['Address'] = f"{row['Street']}, {row['City']}, {row['State']} {row['Zip']}"
+      # Combine Street, City, State, and Zip into Address column
+      new_row['Address'] = f"{row['Street']}, {row['City']}, {row['State']} {row['Zip']}"
     
-        # Ensure Facility Name is the same as Facility in df_215
-        new_row['Facility'] = row['Facility Name']
+      # Ensure Facility Name is the same as Facility in df_215
+      new_row['Facility'] = row['Facility Name']
     
-        # Assign Latitude and Longitude if available
-        new_row['Latitude'] = row.get('Latitude', None)  # Default to None if not present
-        new_row['Longitude'] = row.get('Longitude', None)  # Default to None if not present
+      # Assign Latitude and Longitude if available
+      new_row['Latitude'] = row.get('Latitude', None)  # Default to None if not present
+      new_row['Longitude'] = row.get('Longitude', None)  # Default to None if not present
     
-        # Add to new rows list
-        new_rows_unmatched.append(new_row)
+      # Add to new rows list
+      new_rows_unmatched.append(new_row)
 
     # 3. Add new rows to the existing df_215
     df_215_with_unmatched = pd.concat([df_215, pd.DataFrame(new_rows_unmatched)], ignore_index=True)
