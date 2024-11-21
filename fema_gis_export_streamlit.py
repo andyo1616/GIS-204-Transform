@@ -33,88 +33,67 @@ if uploaded_file_215 and uploaded_file_205A:
     df_205A = pd.read_excel(uploaded_file_205A)
     df_205A.columns = df_205A.columns.str.replace('\n', '').str.strip()
 
-    # Add the 'Facility Type' column from df_205A to df_215
-    df_215 = pd.merge(
-        df_215,
+    # Merge facilities from df_205A into df_215 to ensure every facility is included
+    all_facilities = pd.merge(
         df_205A[['Facility Name', 'Facility Type']],
-        left_on='Facility',
-        right_on='Facility Name',
-        how='left'
+        df_215,
+        left_on='Facility Name',
+        right_on='Facility',
+        how='outer'
     )
-    df_215.drop(columns=['Facility Name'], inplace=True)
 
-    # Replace null values in Facility Type with "No Work Assignment"
-    df_215['Facility Type'] = df_215['Facility Type'].fillna("No Work Assignment")
+    # Fill missing Facility Type values with "No Work Assignment"
+    all_facilities['Facility Type'] = all_facilities['Facility Type'].fillna("No Work Assignment")
 
-    # Reorder the columns to place Facility Type after Facility
-    columns = list(df_215.columns)
+    # Rename columns for consistency
+    all_facilities.rename(columns={'Facility Name': 'Facility'}, inplace=True)
+
+    # Reorder columns to place Facility Type after Facility
+    columns = list(all_facilities.columns)
     facility_index = columns.index('Facility')
     columns.insert(facility_index + 1, columns.pop(columns.index('Facility Type')))
-    df_215 = df_215[columns]
+    all_facilities = all_facilities[columns]
 
-    # Define divisions and rows to delete
-    new_rows = []
-    divisions = ['10 - Carter', '13 - Claiborne', '15 - Cocke', '29 - Grainger', '30 - Greene',
-                 '32 - Hamblen', '37 - Hawkins', '45 - Jefferson', '46 - Johnson', '78 - Sevier',
-                 '82 - Sullivan', '86 - Unicoi', '90 - Washington']
-    tn_dict = {
-        'County': {0: 'Carter', 1: 'Clairborne', 2: 'Cocke', 3: 'Grainger', 4: 'Greene', 5: 'Hamblen', 6: 'Hancock',
-                   7: 'Hawkins', 8: 'Jefferson', 9: 'Johnson', 10: 'Seveir', 11: 'Sullivan', 12: 'Unicoi', 13: 'Washington'},
-        'Branch': {0: 'II', 1: 'I', 2: 'I', 3: 'I', 4: 'I', 5: 'I', 6: 'I',
-                   7: 'I', 8: 'II', 9: 'I', 10: 'I', 11: 'II', 12: 'II', 13: 'II'},
-        'Division': {0: '10 - Carter', 1: '13 - Claiborne', 2: '15 - Cocke', 3: '29 - Grainger', 4: '30 - Greene',
-                     5: '32 - Hamblen', 6: 'Hancock', 7: '37 - Hawkins', 8: '45 - Jefferson', 9: '46 - Johnson', 10: '78 - Sevier',
-                     11: '82 - Sullivan', 12: '86 - Unicoi', 13: '90 - Washington'},
-        'Longitude': {0: -82.127478, 1: -83.660416, 2: -83.121183, 3: -83.50962, 4: -82.845827, 5: -83.275211, 6: -83.221826,
-                      7: -82.944688, 8: -83.446312, 9: -81.851772, 10: -83.524192, 11: -82.304143, 12: -82.516883, 13: -82.49742},
-        'Latitude': {0: 36.292721, 1: 36.485855, 2: 35.925437, 3: 36.276259, 4: 36.175351, 5: 36.203454, 6: 36.523646,
-                     7: 36.441163, 8: 36.050984, 9: 36.454937, 10: 35.784656, 11: 36.512915, 12: 36.063347, 13: 36.293297}
-    }
-    tn_dat = pd.DataFrame(tn_dict)
-
-    rows_to_delete = []
-
-    # Add new rows for facilities in df_205A not already in df_215
-    facilities_in_215 = df_215['Facility'].unique()
-    new_facility_rows = df_205A[~df_205A['Facility Name'].isin(facilities_in_215)].copy()
-    new_facility_rows.rename(columns={'Facility Name': 'Facility'}, inplace=True)
-    new_facility_rows['Division'] = 'Not Assigned'
-    new_facility_rows['Branch'] = 'Not Assigned'
-    new_facility_rows['Address'] = 'Not Available'
-    df_215 = pd.concat([df_215, new_facility_rows], ignore_index=True)
-
-    # Conditional loop based on the checkbox
+    # Add rows for "Throughout Designated Counties" loop if enabled
     if enable_loop:
-        for index, row in df_215.iterrows():
-            if row['Division'] == 'Throughout Designated Counties' and row['Branch'] != 'Mobile Emergency Response Support':
+        new_rows = []
+        divisions = ['10 - Carter', '13 - Claiborne', '15 - Cocke', '29 - Grainger', '30 - Greene',
+                     '32 - Hamblen', '37 - Hawkins', '45 - Jefferson', '46 - Johnson', '78 - Sevier',
+                     '82 - Sullivan', '86 - Unicoi', '90 - Washington']
+        for _, row in all_facilities.iterrows():
+            if row.get('Division', '') == 'Throughout Designated Counties':
                 for division in divisions:
                     new_row = row.copy()
                     new_row['Division'] = division
-                    division_data = tn_dat[tn_dat['Division'] == division]
-                    if not division_data.empty:
-                        new_row['Latitude'] = division_data.iloc[0]['Latitude']
-                        new_row['Longitude'] = division_data.iloc[0]['Longitude']
-                        new_row['Address'] = 'Centroid of County'
                     new_rows.append(new_row)
-                rows_to_delete.append(index)
+        all_facilities = pd.concat([all_facilities, pd.DataFrame(new_rows)], ignore_index=True)
 
-    # Remove rows and add new ones
-    df1 = df_215.drop(rows_to_delete)
-    df1 = pd.concat([df1, pd.DataFrame(new_rows)])
-    df1 = df1.reset_index(drop=True)
+    # Transform columns as needed
+    all_facilities['temp'] = all_facilities['Division']
+    all_facilities['temp'] = all_facilities['temp'].str[5:]
+    all_facilities['Division'] = all_facilities['Division'].str[:2]
+    all_facilities['County'] = all_facilities['temp']
+    all_facilities.drop("temp", axis=1, inplace=True)
 
-    # Modify Division values based on conditions
-    df1.loc[df1['Division'] == 'Not Set', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Not Set', 'Division']
-    df1.loc[df1['Division'] == 'Branch Office', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Branch Office', 'Division']
-    df1.loc[df1['Division'] == 'Throughout Designated Counties', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Throughout Designated Counties', 'Division']
+    # Convert Division to string
+    all_facilities['Division'] = all_facilities['Division'].astype(str)
 
-    # Export df1 as Excel file with current date in filename
+    # Assign Branch values
+    branch_I_divisions = ['47', '78', '45', '15', '30', '32', '37', '29', '34', '13']
+    branch_II_divisions = ['86', '90', '10', '46', '82']
+
+    # Create Branch column
+    all_facilities['Branch'] = ''
+    all_facilities.loc[all_facilities['Division'].isin(branch_I_divisions), 'Branch'] = 'I'
+    all_facilities.loc[all_facilities['Division'].isin(branch_II_divisions), 'Branch'] = 'II'
+
+    # Export the final DataFrame as an Excel file with a timestamp
     central_timezone = pytz.timezone('US/Central')
     central_time = datetime.now(central_timezone)
     current_date = central_time.strftime("%d%b%y")
     excel_filename = f"GIS_204_Export_{current_date}.xlsx"
     output = BytesIO()
-    df1.to_excel(output, index=False)
+    all_facilities.to_excel(output, index=False)
     output.seek(0)
 
     # Provide download link in Streamlit
@@ -126,4 +105,3 @@ if uploaded_file_215 and uploaded_file_205A:
     )
 else:
     st.warning("Please upload both Excel files.")
-
