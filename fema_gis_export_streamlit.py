@@ -30,10 +30,13 @@ if uploaded_file_215 and uploaded_file_205A:
     # Load both files into dataframes
     df_215 = pd.read_excel(uploaded_file_215)
     df_215.columns = df_215.columns.str.replace('\n', '').str.strip()
+    df_215.reset_index(drop=True, inplace=True)  # Ensure unique index
+
     df_205A = pd.read_excel(uploaded_file_205A)
     df_205A.columns = df_205A.columns.str.replace('\n', '').str.strip()
+    df_205A.reset_index(drop=True, inplace=True)  # Ensure unique index
 
-    # Merge facilities from df_205A into df_215 to ensure every facility is included
+    # Merge facilities from df_205A into df_215
     all_facilities = pd.merge(
         df_205A[['Facility Name', 'Facility Type']],
         df_215,
@@ -67,6 +70,9 @@ if uploaded_file_215 and uploaded_file_205A:
                     new_row['Division'] = division
                     new_rows.append(new_row)
         all_facilities = pd.concat([all_facilities, pd.DataFrame(new_rows)], ignore_index=True)
+
+    # Drop duplicate rows if they exist
+    all_facilities.drop_duplicates(inplace=True)
 
     # Transform columns as needed
     all_facilities['temp'] = all_facilities['Division']
