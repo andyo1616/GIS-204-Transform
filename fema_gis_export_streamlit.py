@@ -34,7 +34,6 @@ if uploaded_file_215 and uploaded_file_205A:
     df_205A.columns = df_205A.columns.str.replace('\n', '').str.strip()
 
     # Add the 'Facility Type' column from df_205A to df_215
-    # Matching 'Facility Name' in df_205A with 'Facility' in df_215
     df_215 = pd.merge(
         df_215,
         df_205A[['Facility Name', 'Facility Type']],
@@ -75,6 +74,15 @@ if uploaded_file_215 and uploaded_file_205A:
 
     rows_to_delete = []
 
+    # Add new rows for facilities in df_205A not already in df_215
+    facilities_in_215 = df_215['Facility'].unique()
+    new_facility_rows = df_205A[~df_205A['Facility Name'].isin(facilities_in_215)].copy()
+    new_facility_rows.rename(columns={'Facility Name': 'Facility'}, inplace=True)
+    new_facility_rows['Division'] = 'Not Assigned'
+    new_facility_rows['Branch'] = 'Not Assigned'
+    new_facility_rows['Address'] = 'Not Available'
+    df_215 = pd.concat([df_215, new_facility_rows], ignore_index=True)
+
     # Conditional loop based on the checkbox
     if enable_loop:
         for index, row in df_215.iterrows():
@@ -100,25 +108,6 @@ if uploaded_file_215 and uploaded_file_205A:
     df1.loc[df1['Division'] == 'Branch Office', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Branch Office', 'Division']
     df1.loc[df1['Division'] == 'Throughout Designated Counties', 'Division'] = 'NA - ' + df1.loc[df1['Division'] == 'Throughout Designated Counties', 'Division']
 
-    # Transform columns
-    df1['temp'] = df1['Division']
-    df1['temp'] = df1['temp'].str[5:]
-    df1['Division'] = df1['Division'].str[:2]
-    df1["County"] = df1["temp"]
-    df1 = df1.drop("temp", axis=1)
-
-    # Convert Division to string
-    df1['Division'] = df1['Division'].astype(str)
-
-    # Assign Branch values
-    branch_I_divisions = ['47', '78', '45', '15', '30', '32', '37', '29', '34', '13']
-    branch_II_divisions = ['86', '90', '10', '46', '82']
-
-    # Create Branch column
-    df1['Branch'] = ''
-    df1.loc[df1['Division'].isin(branch_I_divisions), 'Branch'] = 'I'
-    df1.loc[df1['Division'].isin(branch_II_divisions), 'Branch'] = 'II'
-
     # Export df1 as Excel file with current date in filename
     central_timezone = pytz.timezone('US/Central')
     central_time = datetime.now(central_timezone)
@@ -137,3 +126,4 @@ if uploaded_file_215 and uploaded_file_205A:
     )
 else:
     st.warning("Please upload both Excel files.")
+
