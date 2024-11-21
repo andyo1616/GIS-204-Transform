@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """FEMA_GIS_EXPORT_Streamlit.ipynb
-Version 1.1
-20 November 2024
+Version 1.12
+22 November 2024
 Created by LTJG Andrew Orser, USCG 
 Built for FEMA TN Helene response
 Created in Google Colab
@@ -44,8 +44,8 @@ if uploaded_file_215 and uploaded_file_205A:
     )
     df_215.drop(columns=['Facility Name'], inplace=True)
 
-    # Replace null values in Facility Type with "No Work Assignment"
-    df_215['Facility Type'] = df_215['Facility Type'].fillna("No Work Assignment")
+    # Replace null values in Facility Type with "Work Assignment"
+    df_215['Facility Type'] = df_215['Facility Type'].fillna("Work Assignment")
 
     # Reorder the columns to place Facility Type after Facility
     columns = list(df_215.columns)
